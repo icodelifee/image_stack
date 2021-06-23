@@ -35,6 +35,7 @@ class MyApp extends StatelessWidget {
                   imageCount: 3,
                   imageBorderWidth: 3,
                   totalCount: 4,
+                  counterType: CounterType.OnImage,
                 ),
               ],
             ),

@@ -32,9 +32,9 @@ class ImageStack extends StatelessWidget {
   final Color backgroundColor;
 
   /// Enum to define the image source.
-  /// 
+  ///
   /// Describes type of the image source being sent in [imageList]
-  /// 
+  ///
   /// Possible values:
   ///  * Asset
   ///  * Network
@@ -63,6 +63,8 @@ class ImageStack extends StatelessWidget {
   /// To show the remaining count if the provided list size is less than [totalCount]
   final bool showTotalCount;
 
+  final CounterType counterType;
+
   /// Creates a image stack widget.
   ///
   /// The [imageList] and [totalCount] parameters are required.
@@ -76,6 +78,7 @@ class ImageStack extends StatelessWidget {
     this.imageBorderColor = Colors.grey,
     this.imageSource = ImageSource.Network,
     this.showTotalCount = true,
+    this.counterType = CounterType.Separate,
     this.extraCountTextStyle = const TextStyle(
       color: Colors.black,
       fontWeight: FontWeight.w600,
@@ -100,6 +103,7 @@ class ImageStack extends StatelessWidget {
     required this.totalCount,
     this.widgetBorderWidth = 2,
     Color this.widgetBorderColor = Colors.grey,
+    this.counterType = CounterType.Separate,
     this.showTotalCount = true,
     this.extraCountTextStyle = const TextStyle(
       color: Colors.black,
@@ -116,7 +120,7 @@ class ImageStack extends StatelessWidget {
         super(key: key);
 
   /// Creates an image stack by passing list of `ImageProvider`.
-  /// 
+  ///
   /// The [providers] and [totalCount] parameters are required.
   ImageStack.providers({
     Key? key,
@@ -127,6 +131,7 @@ class ImageStack extends StatelessWidget {
     this.imageBorderWidth = 2,
     this.imageBorderColor = Colors.grey,
     this.showTotalCount = true,
+    this.counterType = CounterType.Separate,
     this.extraCountTextStyle = const TextStyle(
       color: Colors.black,
       fontWeight: FontWeight.w600,
@@ -148,7 +153,7 @@ class ImageStack extends StatelessWidget {
     var providersImages = <Widget>[];
     int _size = children.length > 0 ? widgetCount! : imageCount!;
     if (imageList.isNotEmpty) {
-      images.add(circularImage(imageList[0]));
+      images.add(circularImage(imageList[0], 0, images.length));
     } else if (children.isNotEmpty) {
       widgets.add(circularWidget(children[0]));
     } else if (providers.isNotEmpty) {
@@ -166,7 +171,7 @@ class ImageStack extends StatelessWidget {
                 index,
                 Positioned(
                   right: 0.8 * imageRadius! * (index + 1.0),
-                  child: circularImage(image),
+                  child: circularImage(image, index + 1, images.length),
                 ),
               ))
           .values
@@ -225,7 +230,8 @@ class ImageStack extends StatelessWidget {
                           : images,
                 )
               : SizedBox(),
-          Container(
+          if (counterType == CounterType.Separate)
+            Container(
               margin: EdgeInsets.only(left: 5),
               child: showTotalCount && totalCount - _renderedImageSize > 0
                   ? Container(
@@ -246,7 +252,8 @@ class ImageStack extends StatelessWidget {
                         ),
                       ),
                     )
-                  : SizedBox()),
+                  : SizedBox(),
+            ),
         ],
       ),
     );
@@ -271,7 +278,7 @@ class ImageStack extends StatelessWidget {
     );
   }
 
-  Widget circularImage(String imageUrl) {
+  Widget circularImage(String imageUrl, int index, int imageLength) {
     return Container(
       height: imageRadius,
       width: imageRadius,
@@ -287,10 +294,30 @@ class ImageStack extends StatelessWidget {
           shape: BoxShape.circle,
           color: Colors.white,
           image: DecorationImage(
+            colorFilter: counterType == CounterType.OnImage
+                ? index == 0
+                    ? ColorFilter.mode(
+                        Colors.black.withOpacity(0.3),
+                        BlendMode.multiply,
+                      )
+                    : null
+                : null,
             image: imageProvider(imageUrl),
             fit: BoxFit.cover,
           ),
         ),
+        alignment: Alignment.center,
+        child: counterType == CounterType.OnImage
+            ? index == 0
+                ? Text(
+                    '+${totalCount - (imageCount ?? 0)}',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  )
+                : null
+            : null,
       ),
     );
   }
@@ -330,3 +357,4 @@ class ImageStack extends StatelessWidget {
 }
 
 enum ImageSource { Asset, Network, File }
+enum CounterType { OnImage, Separate }
